@@ -1,0 +1,129 @@
+!CfgFileCrc:0400a591
+!Software Version V800R011C00SPC607B607
+!Last configuration was updated at 2020-02-10 02:43:47 UTC
+!Last configuration was saved at 2020-02-10 03:46:49 UTC
+#
+sysname PE-RR-R11
+#
+ip vpn-instance CustA
+ ipv4-family
+  route-distinguisher 10000:1
+  vpn-target 10000:1 export-extcommunity
+  vpn-target 10000:1 import-extcommunity
+#
+mpls lsr-id 10.255.255.11
+#
+mpls
+#
+mpls l2vpn
+ mpls l2vpn auto-create-session 
+#
+vsi CustB-VPLS
+ bgp-ad
+  vpls-id 10000:2
+  vpn-target 10000:2 import-extcommunity
+  vpn-target 10000:2 export-extcommunity
+#
+pw-template VPWS-TO-R33  
+ peer-address 10.255.255.33 
+#
+mpls ldp
+ #
+ ipv4-family
+#
+mpls ldp remote-peer R33
+ remote-ip 10.255.255.33
+#
+interface Ethernet1/0/0
+ undo shutdown
+ l2 binding vsi CustB-VPLS
+ dcn
+ dcn mode vlan
+#
+interface Ethernet1/0/1
+ undo shutdown
+ ip binding vpn-instance CustA
+ ip address 192.168.11.11 255.255.255.0
+ ospf network-type p2p
+ dcn
+ dcn mode vlan
+#
+interface Ethernet1/0/2
+ undo shutdown
+ ip address 10.88.11.11 255.255.255.0
+ ospf network-type p2p
+ mpls
+ mpls ldp
+ dcn mode vlan
+#
+interface Ethernet1/0/3
+ undo shutdown
+ mpls l2vc pw-template VPWS-TO-R33 10003
+ dcn mode vlan
+#
+interface Ethernet1/0/4
+ undo shutdown
+ ip address 10.99.11.11 255.255.255.0
+ ospf network-type p2p
+ mpls
+ mpls ldp
+ dcn mode vlan
+#
+interface LoopBack0
+ ip address 10.255.255.11 255.255.255.255
+#
+bgp 10000
+ router-id 10.255.255.11
+ keep-all-routes
+ peer 10.255.255.22 as-number 10000
+ peer 10.255.255.22 connect-interface LoopBack0
+ peer 10.255.255.33 as-number 10000
+ peer 10.255.255.33 connect-interface LoopBack0
+ peer 10.255.255.44 as-number 10000
+ peer 10.255.255.44 connect-interface LoopBack0
+ #
+ ipv4-family unicast
+  undo synchronization
+  reflector cluster-id 10.255.255.11
+  undo peer 10.255.255.22 enable
+  undo peer 10.255.255.33 enable
+  undo peer 10.255.255.44 enable
+ #
+ l2vpn-ad-family
+  undo policy vpn-target
+  peer 10.255.255.22 enable
+  peer 10.255.255.33 enable
+  peer 10.255.255.33 reflect-client
+  peer 10.255.255.44 enable
+  peer 10.255.255.44 reflect-client
+ #
+ ipv4-family vpnv4
+  undo policy vpn-target
+  peer 10.255.255.22 enable
+  peer 10.255.255.33 enable
+  peer 10.255.255.33 reflect-client
+  peer 10.255.255.44 enable
+  peer 10.255.255.44 reflect-client
+ #
+ ipv4-family vpn-instance CustA
+  import-route ospf 10001
+ #
+ l2vpn-family evpn
+  undo policy vpn-target
+  peer 10.255.255.22 enable
+  peer 10.255.255.33 enable
+  peer 10.255.255.33 reflect-client
+  peer 10.255.255.44 enable
+  peer 10.255.255.44 reflect-client
+#
+ospf 10000 router-id 10.255.255.11
+ area 0.0.0.0
+  network 10.0.0.0 0.255.255.255
+#
+ospf 10001 router-id 192.168.11.11 vpn-instance CustA
+ import-route bgp
+ domain-id 0.0.0.1 type 0005 value 1
+ area 0.0.0.0
+  network 192.168.0.0 0.0.255.255
+#
+return

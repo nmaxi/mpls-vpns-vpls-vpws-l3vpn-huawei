@@ -1,0 +1,65 @@
+!Software Version V800R011C00SPC607B607
+!Last configuration was updated at 2020-02-11 20:21:42+00:00 by SYSTEM automatic
+ally
+!Last configuration was saved at 2020-02-09 00:04:33+00:00
+#
+sysname P-R99
+#
+mpls lsr-id 10.255.255.99
+#
+mpls
+#
+mpls ldp
+ #
+ ipv4-family
+#
+interface Ethernet1/0/0
+ undo shutdown
+ ip address 10.99.88.99 255.255.255.0
+ ospf network-type p2p
+ mpls
+ mpls ldp
+ dcn
+ dcn mode vlan
+#
+interface Ethernet1/0/2
+ undo shutdown
+ ip address 10.99.22.99 255.255.255.0
+ ospf network-type p2p
+ mpls
+ mpls ldp
+ dcn mode vlan
+#
+interface Ethernet1/0/3
+ undo shutdown
+ ip address 10.99.44.99 255.255.255.0
+ ospf network-type p2p
+ mpls
+ mpls ldp
+ dcn mode vlan
+#
+interface Ethernet1/0/4
+ undo shutdown
+ ip address 10.99.11.99 255.255.255.0
+ ospf network-type p2p
+ mpls
+ mpls ldp
+ dcn mode vlan
+#
+interface Ethernet1/0/5
+ undo shutdown
+ ip address 10.99.33.99 255.255.255.0
+ ospf network-type p2p
+ mpls
+ mpls ldp
+ dcn mode vlan
+#
+interface LoopBack0
+ ip address 10.255.255.99 255.255.255.255
+#
+ospf 10000 router-id 10.255.255.99
+ area 0.0.0.0
+  network 10.0.0.0 0.255.255.255
+#
+lldp enable
+return

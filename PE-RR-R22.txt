@@ -1,0 +1,120 @@
+!CfgFileCrcc3259ee8
+!Software Version V800R011C00SPC607B607
+!Last configuration was updated at 2020-02-10 033219 UTC
+!Last configuration was saved at 2020-02-10 034654 UTC
+#
+sysname PE-RR-R22
+#
+ip vpn-instance CustE
+ ipv4-family
+  route-distinguisher 100005
+  vpn-target 100005 export-extcommunity
+  vpn-target 100005 import-extcommunity
+#
+mpls lsr-id 10.255.255.22
+#
+mpls
+#
+mpls l2vpn
+#
+vsi CustB-VPLS
+ bgp-ad
+  vpls-id 100002
+  vpn-target 100002 import-extcommunity
+  vpn-target 100002 export-extcommunity
+#
+mpls ldp
+ #
+ ipv4-family
+# 
+interface Ethernet100
+ undo shutdown
+ ip binding vpn-instance CustE
+ ip address 172.20.22.22 255.255.255.0
+ dcn
+ dcn mode vlan
+#
+interface Ethernet101
+ undo shutdown
+ l2 binding vsi CustB-VPLS
+ dcn
+ dcn mode vlan
+#
+interface Ethernet102
+ undo shutdown
+ ip address 10.99.22.22 255.255.255.0
+ ospf network-type p2p
+ mpls
+ mpls ldp
+ dcn mode vlan
+#
+interface Ethernet103
+ undo shutdown
+ l2 binding vsi CustB-VPLS
+ dcn mode vlan
+# 
+interface Ethernet104
+ undo shutdown
+ ip address 10.88.22.22 255.255.255.0
+ ospf network-type p2p
+ mpls
+ mpls ldp
+ dcn mode vlan
+#
+interface LoopBack0
+ ip address 10.255.255.22 255.255.255.255
+#
+bgp 10000
+ router-id 10.255.255.22
+ keep-all-routes
+ peer 10.255.255.11 as-number 10000
+ peer 10.255.255.11 connect-interface LoopBack0
+ peer 10.255.255.33 as-number 10000
+ peer 10.255.255.33 connect-interface LoopBack0
+ peer 10.255.255.44 as-number 10000
+ peer 10.255.255.44 connect-interface LoopBack0
+ #
+ ipv4-family unicast
+  undo synchronization
+  reflector cluster-id 10.255.255.22
+  undo peer 10.255.255.11 enable
+  undo peer 10.255.255.33 enable
+  undo peer 10.255.255.44 enable
+ #
+ l2vpn-ad-family
+  undo policy vpn-target
+  peer 10.255.255.11 enable
+  peer 10.255.255.33 enable
+  peer 10.255.255.33 reflect-client
+  peer 10.255.255.44 enable
+  peer 10.255.255.44 reflect-client
+ #
+ ipv4-family vpnv4
+  undo policy vpn-target
+  peer 10.255.255.11 enable
+  peer 10.255.255.33 enable
+  peer 10.255.255.33 reflect-client
+  peer 10.255.255.44 enable
+  peer 10.255.255.44 reflect-client
+ #
+ ipv4-family vpn-instance CustE
+  import-route direct
+  import-route static
+ #
+#
+ospf 10000 router-id 10.255.255.22
+ area 0.0.0.0
+  network 10.0.0.0 0.255.255.255
+#
+ospf 65534 vpn-instance __dcn_vpn__
+ description DCN ospf create by default
+ opaque-capability enable
+ hostname
+ vpn-instance-capability simple
+ area 0.0.0.0
+  network 0.0.0.0 255.255.255.255
+#  
+ip route-static vpn-instance CustE 172.20.255.2 255.255.255.255 172.20.22.2
+#
+lldp enable
+return

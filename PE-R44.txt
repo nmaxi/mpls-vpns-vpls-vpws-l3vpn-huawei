@@ -1,0 +1,121 @@
+!CfgFileCrc:ce7c4251
+!Software Version V800R011C00SPC607B607
+!Last configuration was updated at 2020-02-10 01:48:59 UTC
+!Last configuration was saved at 2020-02-10 01:49:01 UTC
+#
+sysname PE-R44
+#
+ip vpn-instance CustA
+ ipv4-family
+  route-distinguisher 10000:1
+  vpn-target 10000:1 export-extcommunity
+  vpn-target 10000:1 import-extcommunity
+#
+ip vpn-instance CustD
+ ipv4-family
+  route-distinguisher 10000:4
+  vpn-target 10000:4 export-extcommunity
+  vpn-target 10000:4 import-extcommunity
+#
+mpls lsr-id 10.255.255.44
+#
+mpls
+#
+mpls l2vpn
+#
+vsi CustB-VPLS
+ bgp-ad
+  vpls-id 10000:2
+  vpn-target 10000:2 import-extcommunity
+  vpn-target 10000:2 export-extcommunity
+#
+mpls ldp
+ #
+ ipv4-family
+#
+interface Ethernet1/0/0
+ undo shutdown
+ ip binding vpn-instance CustD
+ ip address 172.19.44.44 255.255.255.0
+ dcn
+ dcn mode vlan
+#
+interface Ethernet1/0/1
+ undo shutdown
+ ip binding vpn-instance CustA
+ ip address 192.168.44.44 255.255.255.0
+ ospf network-type p2p
+ dcn
+ dcn mode vlan
+#
+interface Ethernet1/0/2
+ undo shutdown
+ l2 binding vsi CustB-VPLS
+ dcn mode vlan
+#
+interface Ethernet1/0/3
+ undo shutdown
+ ip address 10.99.44.44 255.255.255.0
+ ospf network-type p2p
+ mpls
+ mpls ldp
+ dcn mode vlan
+#
+interface Ethernet1/0/5
+ undo shutdown
+ ip address 10.88.44.44 255.255.255.0
+ ospf network-type p2p
+ mpls
+ mpls ldp
+ dcn mode vlan
+#
+interface LoopBack0
+ ip address 10.255.255.44 255.255.255.255
+#
+bgp 10000
+ router-id 10.255.255.44
+ peer 10.255.255.11 as-number 10000
+ peer 10.255.255.11 connect-interface LoopBack0
+ peer 10.255.255.22 as-number 10000
+ peer 10.255.255.22 connect-interface LoopBack0
+ #
+ ipv4-family unicast
+  undo synchronization
+  undo peer 10.255.255.11 enable
+  undo peer 10.255.255.22 enable
+ #
+ l2vpn-ad-family
+  policy vpn-target
+  peer 10.255.255.11 enable
+  peer 10.255.255.22 enable
+ #
+ ipv4-family vpnv4
+  policy vpn-target
+  peer 10.255.255.11 enable
+  peer 10.255.255.22 enable
+ #
+ ipv4-family vpn-instance CustA
+  import-route ospf 10001
+ #
+ ipv4-family vpn-instance CustD
+  import-route direct
+  peer 172.19.44.2 as-number 65004
+  peer 172.19.44.2 substitute-as
+ #
+ l2vpn-family evpn
+  undo policy vpn-target
+  peer 10.255.255.11 enable
+  peer 10.255.255.22 enable
+#
+ospf 10000 router-id 10.255.255.44
+ area 0.0.0.0
+  network 10.0.0.0 0.255.255.255
+#
+ospf 10001 router-id 192.168.44.44 vpn-instance CustA
+ import-route bgp
+ domain-id 0.0.0.1 type 0005 value 1
+ area 0.0.0.0
+  network 192.168.0.0 0.0.255.255
+#
+lldp enable
+return

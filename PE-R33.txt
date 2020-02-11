@@ -1,0 +1,122 @@
+!CfgFileCrc:12248e48
+!Software Version V800R011C00SPC607B607
+!Last configuration was updated at 2020-02-10 03:30:24 UTC
+!Last configuration was saved at 2020-02-10 03:46:42 UTC
+#
+sysname PE-R33
+#
+ip vpn-instance CustD
+ ipv4-family
+  route-distinguisher 10000:4
+  vpn-target 10000:4 export-extcommunity
+  vpn-target 10000:4 import-extcommunity
+#
+ip vpn-instance CustE
+ ipv4-family
+  route-distinguisher 10000:5
+  vpn-target 10000:5 export-extcommunity
+  vpn-target 10000:5 import-extcommunity
+#
+mpls lsr-id 10.255.255.33
+#
+mpls
+#
+mpls l2vpn
+ mpls l2vpn auto-create-session 
+#
+pw-template VPWS-TO-R11  
+ peer-address 10.255.255.11 
+#
+mpls ldp
+ #
+ ipv4-family
+#
+mpls ldp remote-peer R11
+ remote-ip 10.255.255.11
+#
+interface Ethernet1/0/0
+ undo shutdown
+ ip binding vpn-instance CustE
+ ip address 172.20.33.33 255.255.255.0
+ dcn
+ dcn mode vlan
+#
+interface Ethernet1/0/1
+ undo shutdown
+ ip binding vpn-instance CustD
+ ip address 172.19.33.33 255.255.255.0
+ dcn
+ dcn mode vlan
+#
+interface Ethernet1/0/2
+ undo shutdown
+ mpls l2vc pw-template VPWS-TO-R11 10003
+ dcn mode vlan
+#
+interface Ethernet1/0/3
+ undo shutdown
+ ip address 10.88.33.33 255.255.255.0
+ ospf network-type p2p
+ mpls
+ mpls ldp
+ dcn mode vlan
+#
+interface Ethernet1/0/5
+ undo shutdown
+ ip address 10.99.33.33 255.255.255.0
+ ospf network-type p2p
+ mpls
+ mpls ldp
+ dcn mode vlan
+#
+interface LoopBack0
+ ip address 10.255.255.33 255.255.255.255
+#
+bgp 10000
+ router-id 10.255.255.33
+ peer 10.255.255.11 as-number 10000
+ peer 10.255.255.11 connect-interface LoopBack0
+ peer 10.255.255.22 as-number 10000
+ peer 10.255.255.22 connect-interface LoopBack0
+ #
+ ipv4-family unicast
+  undo synchronization
+  undo peer 10.255.255.11 enable
+  undo peer 10.255.255.22 enable
+ #
+ l2vpn-ad-family
+  policy vpn-target
+  peer 10.255.255.11 enable
+  peer 10.255.255.22 enable
+ #
+ ipv4-family vpnv4
+  policy vpn-target
+  peer 10.255.255.11 enable
+  peer 10.255.255.22 enable
+ #
+ ipv4-family vpn-instance CustD
+  import-route direct
+  peer 172.19.33.1 as-number 65004
+  peer 172.19.33.1 substitute-as
+ #
+ ipv4-family vpn-instance CustE
+  import-route direct
+  import-route static
+ #
+# 
+ospf 10000 router-id 10.255.255.33
+ area 0.0.0.0
+  network 10.0.0.0 0.255.255.255
+#
+ospf 65534 vpn-instance __dcn_vpn__
+ description DCN ospf create by default
+ opaque-capability enable
+ hostname
+ vpn-instance-capability simple
+ area 0.0.0.0
+  network 0.0.0.0 255.255.255.255
+#
+ip route-static vpn-instance CustE 172.20.255.1 255.255.255.255 172.20.33.1
+#
+lldp enable
+return
